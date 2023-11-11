@@ -37,7 +37,7 @@ data "aws_security_group" "default-sg" {
 }
 
 resource "aws_security_group_rule" "ssh-rule" {
-    description       = "SSH"
+  description       = "SSH"
   type              = "ingress"
   from_port         = 22
   to_port           = 22
@@ -47,7 +47,7 @@ resource "aws_security_group_rule" "ssh-rule" {
 }
 
 resource "aws_security_group_rule" "detector-rule" {
-    description       = "Detector port"
+  description       = "Detector port"
   type              = "ingress"
   from_port         = 40674
   to_port           = 40674
