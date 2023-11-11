@@ -8,6 +8,5 @@ License_plate_recognition
 *.h5
 inventory.yml
 .ansible-lint
-Docker
 .terraform
 parking-result.png
