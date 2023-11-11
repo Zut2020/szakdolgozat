@@ -10,3 +10,4 @@ inventory.yml
 .ansible-lint
 .terraform
 parking-result.png
+tfplan
