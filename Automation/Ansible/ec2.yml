@@ -1,0 +1,137 @@
+---
+- name: Create detection server
+  hosts: ec2test
+  remote_user: ubuntu
+
+  tasks:
+    - name: Ensure python3 is installed
+      become: true
+      ansible.builtin.apt:
+        name: python3
+        state: present
+
+    - name: Ensure unzip is installed
+      become: true
+      ansible.builtin.apt:
+        name: unzip
+        state: present
+
+    - name: Ensure cv2 dependencies are installed
+      ansible.builtin.apt:
+        pkg:
+          - ffmpeg
+          - libsm6
+          - libxext6
+          - tesseract-ocr
+          - libtesseract-dev
+        update_cache: true
+      become: true
+
+    - name: Check whether conda is installed and on system path
+      ansible.builtin.command: '/opt/miniconda3/bin/conda'
+      register: conda_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: Install Conda
+      when: "'No such file or directory' in conda_installed.msg"
+      block:
+        - name: Download Miniconda
+          ansible.builtin.get_url:
+            url: https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+            dest: /tmp/install-miniconda.sh
+            checksum: sha256:43651393236cb8bb4219dcd429b3803a60f318e5507d8d84ca00dafa0c69f1bb
+            mode: '0550'
+        - name: Create conda folder
+          become: true
+          ansible.builtin.file:
+            path: /opt/miniconda3
+            state: directory
+            owner: ubuntu
+            mode: '755'
+            recurse: true
+        - name: Run the installer
+          ansible.builtin.command: /tmp/install-miniconda.sh -b -u -p /opt/miniconda3
+        - name: Remove the installer
+          ansible.builtin.file:
+            state: absent
+            path: /tmp/install-miniconda.sh
+        - name: Add miniconda bin to path
+          become: true
+          ansible.builtin.shell: echo 'export PATH=/opt/miniconda3/bin:$PATH' >> /etc/profile
+        - name: Conda - read permission for all
+          become: true
+          ansible.builtin.file:
+            path: /opt/miniconda3
+            mode: +r
+            recurse: true
+        - name: Conda - execution permission for all
+          become: true
+          ansible.builtin.file:
+            path: /opt/miniconda3/bin
+            mode: +x
+            recurse: true
+
+    - name: Ensure conda environment exists
+      ansible.builtin.shell:
+        cmd: |
+          if /opt/miniconda3/bin/conda info --envs | grep -q py37; then echo "environment already exists"; else /opt/miniconda3/bin/conda create -y -n py37 python=3.7; fi
+      register: envout
+      changed_when: "'environment already exists' not in envout.stdout"
+
+    - name: Check if server files exits
+      ansible.builtin.stat:
+        path: /home/ubuntu/server.py
+      register: stat_result
+
+    - name: Get server software
+      when: not stat_result.stat.exists
+      block:
+        - name: Download server zip
+          ansible.builtin.get_url:
+            url: https://github.com/Zut2020/szakdolgozat/releases/download/Server/server.zip
+            dest: /tmp/server.zip
+            mode: '0440'
+        - name: Extract server zip
+          ansible.builtin.unarchive:
+            src: /tmp/server.zip
+            dest: /home/ubuntu/
+            remote_src: true
+        - name: Remove server zip
+          ansible.builtin.file:
+            state: absent
+            path: /tmp/server.zip
+
+    - name: Install python modules
+      ansible.builtin.shell: |
+        cd /opt/miniconda3/bin/
+        source activate py37
+        cd /home/ubuntu/
+        pip install -r requirements.txt
+        cd /home/ubuntu/Mask_RCNN
+        pip install -r requirements.txt
+      args:
+        executable: /bin/bash
+      register: firstpip
+      changed_when: "'Installing collected packages' in firstpip.stdout"
+
+    - name: Check for MaskRCNN
+      ansible.builtin.shell: |
+        cd /opt/miniconda3/bin/
+        source activate py37
+        python -c "from mrcnn.model import MaskRCNN"
+      args:
+        executable: /bin/bash
+      register: MaskRCNN
+      ignore_errors: true
+      changed_when: false
+
+    - name: Install MaskRCNN
+      ansible.builtin.shell: |
+        cd /opt/miniconda3/bin/
+        source activate py37
+        cd /home/ubuntu/Mask_RCNN
+        python setup.py install
+      args:
+        executable: /bin/bash
+      when: '"No module named" in MaskRCNN.stderr'
