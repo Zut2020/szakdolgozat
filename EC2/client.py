@@ -1,4 +1,5 @@
 import os
+import sys
 import socket
 import boto3
 
@@ -23,7 +24,7 @@ print("Upload complete.")
 port = 40674
 
 # connect to the server on local computer
-s.connect(('localhost', port))
+s.connect((sys.argv[1], port))
 
 # receive data from the server
 print(s.recv(1024).decode())
