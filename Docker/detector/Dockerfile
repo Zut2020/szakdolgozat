@@ -23,12 +23,12 @@ RUN python -m pip install -r requirements.txt
 
 COPY regions.p .
 COPY Mask_RCNN/ ./Mask_RCNN/
-COPY server.py .
-COPY detection.py .
 
 WORKDIR /server/Mask_RCNN
 RUN python -m pip install -r requirements.txt
 RUN python setup.py install
 
 WORKDIR /server
+COPY server.py .
+COPY detection.py .
 ENTRYPOINT ["python", "/server/server.py"]
