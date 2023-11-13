@@ -84,6 +84,7 @@ def compute_overlaps(parked_car_boxes, car_boxes):
 
 model = MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=Config())
 model.load_weights(COCO_MODEL_PATH, by_name=True)
+model.keras_model._make_predict_function()
 regions = "regions.p"
 with open(regions, 'rb') as f:
     parked_car_boxes = pickle.load(f)

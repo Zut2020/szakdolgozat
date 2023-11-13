@@ -10,3 +10,5 @@ shapely
 protobuf==3.20.*
 h5py==2.10.0
 PyQt5==5.9.2
+flask
+requests

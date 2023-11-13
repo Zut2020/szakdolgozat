@@ -2,29 +2,19 @@ import socket
 import os
 import ocr
 import boto3
+from flask import Flask, flash, request, redirect, url_for
+from werkzeug.utils import secure_filename
 
-dynamodb_resource = boto3.resource('dynamodb')
+dynamodb_resource = boto3.resource('dynamodb', region_name='us-east-1')
 
-dynamodb_client = boto3.client('dynamodb')
+dynamodb_client = boto3.client('dynamodb', region_name='us-east-1')
 
 s3_client = boto3.client('s3')
 
-s = socket.socket()
-print ("Socket successfully created")
- 
-port = 40675
- 
-s.bind(('', port))
-print ("socket binded to %s" %(port))
+app = Flask(__name__)
 
-s.listen(5)    
-print ("socket is listening")
-
-while True:
- 
-    # Establish connection with client.
-    c, addr = s.accept()
-
+@app.route('/', methods=['GET'])
+def recognize():
     table = dynamodb_resource.Table('Parking')
 
     response = table.scan(ProjectionExpression='picture_name, CarID')
@@ -46,5 +36,7 @@ while True:
             }
         )
         os.remove(picture_name)
- 
-    c.close()
+    return "Recognition complete"
+
+if __name__ == '__main__':
+	app.run(host='0.0.0.0', port=8081)
