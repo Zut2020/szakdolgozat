@@ -32,6 +32,24 @@ resource "aws_s3_bucket" "parking-storage" {
   bucket = "parking-g1t1sz"
 }
 
+resource "aws_s3_bucket_policy" "public-access" {
+  bucket = aws_s3_bucket.parking-storage.id
+  policy = <<EOT
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                  {
+                      "Sid": "PublicRead",
+                      "Effect": "Allow",
+                      "Principal": "*",
+                      "Action": "s3:GetObject",
+                      "Resource": "arn:aws:s3:::parking-g1t1sz/*"
+                  }
+              ]
+          }
+          EOT
+}
+
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
