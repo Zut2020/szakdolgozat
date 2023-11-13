@@ -1,41 +1,52 @@
-import socket
 import detection
-import ocr
+import os
+from flask import Flask, flash, request, redirect, url_for
+from werkzeug.utils import secure_filename
 
-# next create a socket object
-s = socket.socket()
-print ("Socket successfully created")
- 
-# reserve a port on your computer in our
-# case it is 40674 but it can be anything
-port = 40674
- 
-# Next bind to the port
-# we have not typed any ip in the ip field
-# instead we have inputted an empty string
-# this makes the server listen to requests
-# coming from other computers on the network
-s.bind(('', port))
-print ("socket binded to %s" %(port))
- 
-# put the socket into listening mode
-s.listen(5)    
-print ("socket is listening")
- 
-# a forever loop until we interrupt it or
-# an error occurs
-while True:
- 
-    # Establish connection with client.
-    c, addr = s.accept()
-    print ('Got connection from', addr )
- 
-    # send a thank you message to the client.
-    c.send(b'Starting detection...')
+UPLOAD_FOLDER = '/home/balazs/server/upload'
+ALLOWED_EXTENSIONS = {'png'}
 
-    free_spaces = detection.detect()
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-    c.send(str(free_spaces).encode())
- 
-    # Close the connection with the client
-    c.close()
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit a empty part without filename
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    return '''
+    <!doctype html>
+    <title>Parking</title>
+    <h1>Latest result image:</h1>
+    <img src="https://parking-g1t1sz.s3.amazonaws.com/parking_result.png">
+    </form>
+    <h1>Manual image upload</h1>
+    <form method=post enctype=multipart/form-data>
+    <input type=file name=file>
+    <input type=submit value=Upload>
+    
+    <hr>
+    '''
+
+@app.route('/detect', methods=['GET'])
+def detect():
+    detection.detect()
+    return "Detection complete"
+
+if __name__ == '__main__':
+	app.run(host='0.0.0.0', port=8080)
