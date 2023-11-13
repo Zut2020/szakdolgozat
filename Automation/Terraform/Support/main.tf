@@ -32,36 +32,107 @@ resource "aws_s3_bucket" "parking-storage" {
   bucket = "parking-g1t1sz"
 }
 
-data "aws_security_group" "default-sg" {
-  name = "default"
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "main"
+  }
 }
 
-resource "aws_security_group_rule" "ssh-rule" {
-  description       = "SSH"
-  type              = "ingress"
-  from_port         = 22
-  to_port           = 22
-  protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = data.aws_security_group.default-sg.id
+resource "aws_subnet" "ec2" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "ec2-subnet"
+  }
 }
 
-resource "aws_security_group_rule" "detector-rule" {
-  description       = "Detector port"
-  type              = "ingress"
-  from_port         = 40674
-  to_port           = 40674
-  protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = data.aws_security_group.default-sg.id
+resource "aws_subnet" "docker" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.0.2.0/24"
+
+  tags = {
+    Name = "docker-subnet"
+  }
 }
 
-resource "aws_security_group_rule" "ocr-rule" {
-  description       = "Detector port"
-  type              = "ingress"
-  from_port         = 40675
-  to_port           = 40675
-  protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = data.aws_security_group.default-sg.id
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "main"
+  }
+}
+
+resource "aws_route" "default" {
+  route_table_id         = aws_vpc.main.main_route_table_id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.gw.id
+  depends_on             = [aws_vpc.main]
+}
+
+resource "aws_security_group" "ec2" {
+  name        = "detector-ec2"
+  description = "Rules for detector EC2 instance"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description      = "SSH"
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  ingress {
+    description      = "Detection port"
+    from_port        = 40674
+    to_port          = 40674
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "detector-ec2"
+  }
+}
+
+resource "aws_security_group" "docker" {
+  name        = "detector-docker"
+  description = "Rules for detector containers"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description      = "Detection port"
+    from_port        = 40674
+    to_port          = 40674
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "detector-docker"
+  }
 }
