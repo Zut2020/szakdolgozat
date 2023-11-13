@@ -74,15 +74,15 @@ resource "aws_lb" "docker-lb" {
 
 resource "aws_lb_target_group" "docker" {
   name        = "docker-tg"
-  port        = 40674
+  port        = 8080
   protocol    = "TCP"
   target_type = "ip"
   vpc_id      = data.aws_vpc.main.id
 }
 
-resource "aws_lb_listener" "detector" {
+resource "aws_lb_listener" "docker" {
   load_balancer_arn = aws_lb.docker-lb.arn
-  port              = "40674"
+  port              = "8080"
   protocol          = "TCP"
 
   default_action {
@@ -118,9 +118,9 @@ resource "aws_ecs_task_definition" "detector-task" {
       essential = true
       portMappings = [
         {
-          name          = "detector-40674-tcp"
-          containerPort = 40674
-          hostPort      = 40674
+          name          = "detector-8080-tcp"
+          containerPort = 8080
+          hostPort      = 8080
         }
       ]
       logConfiguration = {
@@ -140,8 +140,8 @@ resource "aws_ecs_task_definition" "detector-task" {
       essential = true
       portMappings = [
         {
-          containerPort = 40675
-          hostPort      = 40675
+          containerPort = 8081
+          hostPort      = 8081
         }
       ]
       logConfiguration = {
@@ -173,9 +173,9 @@ resource "aws_ecs_service" "detector-service" {
     assign_public_ip = true
   }
 
-  /* load_balancer {
+  load_balancer {
     target_group_arn = aws_lb_target_group.docker.arn
     container_name   = "detector"
-    container_port   = 40674
-  } */
+    container_port   = 8080
+  }
 }
