@@ -108,8 +108,8 @@ resource "aws_security_group" "ec2" {
 
   ingress {
     description      = "Detection port"
-    from_port        = 40674
-    to_port          = 40674
+    from_port        = 8080
+    to_port          = 8080
     protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
@@ -135,8 +135,8 @@ resource "aws_security_group" "docker" {
 
   ingress {
     description      = "Detection port"
-    from_port        = 40674
-    to_port          = 40674
+    from_port        = 8080
+    to_port          = 8080
     protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]

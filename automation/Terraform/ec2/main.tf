@@ -69,7 +69,7 @@ resource "aws_lb" "ec2-lb" {
 
 resource "aws_lb_target_group" "ec2" {
   name        = "ec2-tg"
-  port        = 40674
+  port        = 8080
   protocol    = "TCP"
   target_type = "ip"
   vpc_id      = data.aws_vpc.main.id
@@ -77,13 +77,13 @@ resource "aws_lb_target_group" "ec2" {
 
 resource "aws_lb_target_group_attachment" "attachment" {
   target_group_arn = aws_lb_target_group.ec2.arn
-  target_id        = aws_instance.detector
-  port             = 40674
+  target_id        = aws_instance.detector.private_ip
+  port             = 8080
 }
 
-resource "aws_lb_listener" "detector" {
+resource "aws_lb_listener" "ec2" {
   load_balancer_arn = aws_lb.ec2-lb.arn
-  port              = "40674"
+  port              = "8080"
   protocol          = "TCP"
 
   default_action {
