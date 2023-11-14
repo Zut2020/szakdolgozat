@@ -23,7 +23,7 @@ def recognize():
     for item in data:
         picture_name = item['picture_name']
         print(picture_name)
-        s3_client.download_file('parking-g1t1sz', picture_name, picture_name)
+        s3_client.download_file('cars-g1t1sz', picture_name, picture_name)
         plate_number = ocr.license_plate_detect(picture_name)
         dynamodb_client.update_item(
             TableName="Parking", 

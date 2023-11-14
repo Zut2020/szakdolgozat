@@ -32,6 +32,10 @@ resource "aws_s3_bucket" "parking-storage" {
   bucket = "parking-g1t1sz"
 }
 
+resource "aws_s3_bucket" "cars-storage" {
+  bucket = "cars-g1t1sz"
+}
+
 resource "aws_s3_bucket_policy" "public-access" {
   bucket = aws_s3_bucket.parking-storage.id
   policy = <<EOT

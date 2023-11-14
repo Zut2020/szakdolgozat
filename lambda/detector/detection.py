@@ -130,11 +130,11 @@ def lambda_handler(event, context):
         y2 = car_box[2]
         x2 = car_box[3]
         crop_img = im[y1:y2, x1:x2]
-        car_pic_name = "car" + str(index) + ".png"
+        car_pic_name = str(index) + ".png"
         car_path = os.path.join("/tmp", car_pic_name)
         cv2.imwrite(car_path, crop_img)
 
-        s3_client.upload_file(car_path, "parking-g1t1sz", car_pic_name)
+        s3_client.upload_file(car_path, "cars-g1t1sz", car_pic_name)
         dynamodb.put_item(TableName="Parking", Item={
         'CarID': {'N': str(index)},
         'picture_name': {'S': car_pic_name},

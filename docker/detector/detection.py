@@ -122,10 +122,10 @@ def detect():
         y2 = car_box[2]
         x2 = car_box[3]
         crop_img = im[y1:y2, x1:x2]
-        car_pic_name = "car" + str(index) + ".png"
+        car_pic_name = str(index) + ".png"
         cv2.imwrite(car_pic_name, crop_img)
 
-        s3_client.upload_file(car_pic_name, "parking-g1t1sz", car_pic_name)
+        s3_client.upload_file(car_pic_name, "cars-g1t1sz", car_pic_name)
         dynamodb.put_item(TableName="Parking", Item={
         'CarID': {'N': str(index)},
         'picture_name': {'S': car_pic_name},
