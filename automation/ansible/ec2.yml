@@ -140,3 +140,19 @@
       args:
         executable: /bin/bash
       when: '"No module named" in MaskRCNN.stderr'
+
+    - name: Check if server is running
+      ansible.builtin.shell: ps aux | grep "server.py" | grep -v grep
+      ignore_errors: yes
+      changed_when: false
+      register: server_status
+
+    - name: Start server
+      ansible.builtin.shell: |
+        cd /opt/miniconda3/bin/
+        source activate py37
+        cd /home/ubuntu/
+        nohup python server.py >/dev/null 2>&1 &
+      args:
+        executable: /bin/bash
+      when: server_status.rc == 1
