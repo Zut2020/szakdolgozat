@@ -146,7 +146,7 @@ def lambda_handler(event, context):
 
 
     print("Uploading result...")
-    s3_client.upload_file(parking_result_path, "parking-g1t1sz", parking_result_path)
+    s3_client.upload_file(parking_result_path, "parking-g1t1sz", "parking_result.png")
     print("Upload complete.")
 
     return {
