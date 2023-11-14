@@ -89,7 +89,7 @@
       block:
         - name: Download server zip
           ansible.builtin.get_url:
-            url: https://github.com/Zut2020/szakdolgozat/releases/download/Server/server.zip
+            url: https://github.com/Zut2020/szakdolgozat/releases/download/server-flask/Server.zip
             dest: /tmp/server.zip
             mode: '0440'
         - name: Extract server zip
@@ -101,6 +101,11 @@
           ansible.builtin.file:
             state: absent
             path: /tmp/server.zip
+
+    - name: Clone MaskRCNN
+      ansible.builtin.git:
+        repo: https://github.com/matterport/Mask_RCNN.git
+        dest: /home/ubuntu/Mask_RCNN
 
     - name: Install python modules
       ansible.builtin.shell: |
